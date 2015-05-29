@@ -41,7 +41,7 @@ cdc_fields_mapping = {
             '_LBMI1': 'lbmi1',
             '_MBMI1': 'mbmi1',
             '_SBMI1': 'sbmi1',
-            '_LBMI2': 'lmbi2',
+            '_LBMI2': 'lbmi2',
             '_MBMI2': 'mbmi2',
             '_SBMI2': 'sbmi2',
             '_LHC1': 'lhc1',
@@ -146,8 +146,7 @@ def process(input_file, document_type, verbose):
                     required_elements = get_required_elements(element_positions, line_elements, document_type, verbose)
                     if required_elements:
                         query = create_query(required_elements)
-                        if verbose:
-                            print(query)
+                        print(query)
                 first_line = False
     except IOError as err:
         print('Error while processing file: ')
@@ -155,12 +154,16 @@ def process(input_file, document_type, verbose):
 
 
 def create_query(required_elements):
-    template = 'INSERT INTO {0} VALUES ({1});'
+    template = 'INSERT INTO {0} ({1}) VALUES ({2});'
     table_name = required_elements['table']
     fields = required_elements['fields']
-    fields_list = ['{0}={1}'.format(field, value) for field, value in fields.items() if value]
-    joined_list = ', '.join(fields_list)
-    return template.format(table_name, joined_list)
+    fields_list = []
+    values_list = []
+    for field, value in fields.items():
+        if value:
+            fields_list.append(field)
+            values_list.append(value)
+    return template.format(table_name, ','.join(fields_list), ','.join(values_list))
 
 
 def get_element_positions(line_elements):
@@ -169,7 +172,7 @@ def get_element_positions(line_elements):
     for element in line_elements:
         result[element] = index
         index += 1
-    print(str(result))
+    # print(str(result))
     return result
 
 
@@ -177,8 +180,8 @@ def get_required_elements(element_positions, split_elements, document_type, verb
     result = {}
     map = cdc_fields_mapping if CDC == document_type else None
     denom = split_elements[0]
-    if verbose:
-        print('/* processing denom: ' + denom + ' */')
+    # if verbose:
+    #     print('/* processing denom: ' + denom + ' */')
     demon_map = map.get(denom)
     if demon_map:
         table_name = demon_map.get('table')
