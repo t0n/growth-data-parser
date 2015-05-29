@@ -4,11 +4,83 @@
 """
 
 import getopt
+import string
 import sys
 
 
 CDC = 'cdc'
 WHO = 'who'
+
+
+cdc_fields_mapping = {
+    'age': {
+        'table': 'cdc_by_age',
+        'fields': {
+            'SEX': 'sex',
+            '_AGEMOS1': 'agemos1',
+            '_LLG1': 'llg1',
+            '_MLG1': 'mlg1',
+            '_SLG1': 'slg1',
+            '_AGEMOS2': 'agemos2',
+            '_LLG2': 'llg2',
+            '_MLG2': 'mlg2',
+            '_SLG2': 'slg2',
+            '_AGECAT': 'agecat',
+            '_LHT1': 'lht1',
+            '_MHT1': 'mht1',
+            '_SHT1': 'sht1',
+            '_LHT2': 'lht2',
+            '_MHT2': 'mht2',
+            '_SHT2': 'sht2',
+            '_LWT1': 'lwt1',
+            '_MWT1': 'mwt1',
+            '_SWT1': 'swt1',
+            '_LWT2': 'lwt2',
+            '_MWT2': 'mwt2',
+            '_SWT2': 'swt2',
+            '_LBMI1': 'lbmi1',
+            '_MBMI1': 'mbmi1',
+            '_SBMI1': 'sbmi1',
+            '_LBMI2': 'lmbi2',
+            '_MBMI2': 'mbmi2',
+            '_SBMI2': 'sbmi2',
+            '_LHC1': 'lhc1',
+            '_MHC1': 'mhc1',
+            '_SHC1': 'shc1',
+            '_LHC2': 'lhc2',
+            '_MHC2': 'mhc2',
+            '_SHC2': 'shc2',
+        }
+    },
+    'length': {
+        'table': 'cdc_by_length',
+        'fields': {
+            '_LG1': 'lg1',
+            '_LWLG1': 'lwlg1',
+            '_MWLG1': 'mwlg1',
+            '_SWLG1': 'swlg1',
+            '_LG2': 'lg1',
+            '_LWLG2': 'lwlg2',
+            '_MWLG2': 'mwlg2',
+            '_SWLG2': 'swlg2',
+            '_htcat': 'htcat',
+        },
+    },
+    'height': {
+        'table': 'cdc_by_height',
+        'fields': {
+            '_htcat': 'htcat',
+            '_HT1': 'ht1',
+            '_LWHT1': 'lwht1',
+            '_MWHT1': 'msht1',
+            '_SWHT1': 'swht1',
+            '_HT2': 'ht2',
+            '_LWHT2': 'lwht2',
+            '_MWHT2': 'mwht2',
+            '_SWHT2': 'swht2',
+        }
+    },
+}
 
 
 def main(argv):
@@ -57,62 +129,16 @@ def usage():
     """
 
 
-cdc_fields_mapping = {
-    'age': {
-        'table': 'cdc_by_age',
-        'fields': {
-            'SEX': 'sex',
-            '_AGEMOS1': 'agemos1',
-            '_LLG1': 'llg1',
-            '_MLG1': 'mlg1',
-            '_SLG1': 'slg1',
-            '_AGEMOS2': 'agemos2',
-            '_LLG2': 'llg2',
-            '_MLG2': 'mlg2',
-            '_SLG2': 'slg2',
-            '_AGECAT': 'agecat',
-            '_LHT1': 'lht1',
-            '_MHT1': 'mht1',
-            '_SHT1': 'sht1',
-            '_LHT2': 'lht2',
-            '_MHT2': 'mht2',
-            '_SHT2': 'sht2',
-            '_LWT1': 'lwt1',
-            '_MWT1': 'mwt1',
-            '_SWT1': 'swt1',
-            '_LWT2': 'lwt2',
-            '_MWT2': 'mwt2',
-            '_SWT2': 'swt2',
-            '_LBMI1': 'lbmi1',
-            '_MBMI1': 'mbmi1',
-            '_SBMI1': 'sbmi1',
-            '_LBMI2': 'lmbi2',
-            '_MBMI2': 'mbmi2',
-            '_SBMI2': 'sbmi2',
-            '_LHC1': 'lhc1',
-            '_MHC1': 'mhc1',
-            '_SHC1': 'shc1',
-            '_LHC2': 'lhc2',
-            '_MHC2': 'mhc2',
-            '_SHC2': 'shc2',
-        }
-    },
-    # 'length': {},
-    # 'height': {},
-}
-
-
 def process(input_file, document_type, verbose):
-    result_sql = []
     if verbose:
-        print('document type is: ' + document_type)
-        print('reading input file \'' + input_file + '\': ')
+        print('/* document type is: ' + document_type + ' */')
+        print('/* reading input file \'' + input_file + '\': */')
     try:
         with open(input_file) as inp:
             element_positions = {}
             first_line = True
             for line in inp:
-                # print(line)
+                line = line.strip()
                 line_elements = line.split(',')
                 if first_line:
                     element_positions = get_element_positions(line_elements)
@@ -129,7 +155,7 @@ def process(input_file, document_type, verbose):
 
 
 def create_query(required_elements):
-    template = 'INSERT INTO {0} VALUES ({1})'
+    template = 'INSERT INTO {0} VALUES ({1});'
     table_name = required_elements['table']
     fields = required_elements['fields']
     fields_list = ['{0}={1}'.format(field, value) for field, value in fields.items() if value]
@@ -152,7 +178,7 @@ def get_required_elements(element_positions, split_elements, document_type, verb
     map = cdc_fields_mapping if CDC == document_type else None
     denom = split_elements[0]
     if verbose:
-        print('processing denom: ' + denom)
+        print('/* processing denom: ' + denom + ' */')
     demon_map = map.get(denom)
     if demon_map:
         table_name = demon_map.get('table')
@@ -167,11 +193,11 @@ def get_required_elements(element_positions, split_elements, document_type, verb
                     # print('value: ' + str(value))
                     result_fields[result_field] = value
                 else:
-                    print('cannot find position for element: ' + str(input_field))
+                    print('/* cannot find position for element: ' + str(input_field) + ' */')
         result['table'] = table_name
         result['fields'] = result_fields
     else:
-        print('no fields map for type ' + document_type + ' and denom ' + denom)
+        print('/* no fields map for type ' + document_type + ' and denom ' + denom + ' */')
 
     # print(str(result))
     return result
