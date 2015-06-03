@@ -4,7 +4,6 @@
 """
 
 import getopt
-import string
 import sys
 
 
@@ -12,7 +11,7 @@ CDC = 'cdc'
 WHO = 'who'
 
 
-cdc_fields_mapping = {
+CDC_FIELDS_MAPPING = {
     'age': {
         'table': 'cdc_by_age',
         'fields': {
@@ -55,11 +54,12 @@ cdc_fields_mapping = {
     'length': {
         'table': 'cdc_by_length',
         'fields': {
+            'SEX': 'sex',
             '_LG1': 'lg1',
             '_LWLG1': 'lwlg1',
             '_MWLG1': 'mwlg1',
             '_SWLG1': 'swlg1',
-            '_LG2': 'lg1',
+            '_LG2': 'lg2',
             '_LWLG2': 'lwlg2',
             '_MWLG2': 'mwlg2',
             '_SWLG2': 'swlg2',
@@ -69,16 +69,59 @@ cdc_fields_mapping = {
     'height': {
         'table': 'cdc_by_height',
         'fields': {
+            'SEX': 'sex',
             '_htcat': 'htcat',
             '_HT1': 'ht1',
             '_LWHT1': 'lwht1',
-            '_MWHT1': 'msht1',
+            '_MWHT1': 'mwht1',
             '_SWHT1': 'swht1',
             '_HT2': 'ht2',
             '_LWHT2': 'lwht2',
             '_MWHT2': 'mwht2',
             '_SWHT2': 'swht2',
         }
+    },
+}
+
+
+WHO_FIELDS_MAPPING = {
+    'forage': {
+        'table': 'who_by_age',
+        'fields': {
+            'sex': 'sex',
+            '_agedays': 'agedays',
+            '_bmi_l': 'bmil',
+            '_bmi_m': 'bmim',
+            '_bmi_s': 'bmis',
+            '_tsf_l': 'tsf_l',
+            '_tsf_m': 'tsf_m',
+            '_tsf_s': 'tsf_s',
+            '_ssf_l': 'ssf_l',
+            '_ssf_m': 'ssf_m',
+            '_ssf_s': 'ssf_s',
+            '_armc_l': 'armc_l',
+            '_armc_m': 'armc_m',
+            '_armc_s': 'armc_s',
+            '_headc_l': 'headc_l',
+            '_headc_m': 'headc_m',
+            '_headc_s': 'headc_s',
+            '_wei_l': 'wei_l',
+            '_wei_m': 'wei_m',
+            '_wei_s': 'wei_s',
+            '_len_l': 'len_l',
+            '_len_m': 'len_m',
+            '_len_s': 'len_s',
+        }
+    },
+    'forlen': {
+        'table': 'who_by_length',
+        'fields': {
+            'sex': 'sex',
+            '_len': 'len',
+            '_wfl_l': 'wfl_l',
+            '_wfl_m': 'wfl_m',
+            '_wfl_s': 'wfl_s',
+        },
     },
 }
 
@@ -137,6 +180,7 @@ def process(input_file, document_type, verbose):
         with open(input_file) as inp:
             element_positions = {}
             first_line = True
+            line_number = 1
             for line in inp:
                 line = line.strip()
                 line_elements = line.split(',')
@@ -145,16 +189,17 @@ def process(input_file, document_type, verbose):
                 else:
                     required_elements = get_required_elements(element_positions, line_elements, document_type, verbose)
                     if required_elements:
-                        query = create_query(required_elements)
+                        query = create_query(required_elements, line_number)
                         print(query)
                 first_line = False
+                line_number += 1
     except IOError as err:
         print('Error while processing file: ')
         print(str(err))
 
 
-def create_query(required_elements):
-    template = 'INSERT INTO {0} ({1}) VALUES ({2});'
+def create_query(required_elements, num):
+    template = 'INSERT INTO {0} ({1}) VALUES ({2}); /* {3} */'
     table_name = required_elements['table']
     fields = required_elements['fields']
     fields_list = []
@@ -163,7 +208,7 @@ def create_query(required_elements):
         if value:
             fields_list.append(field)
             values_list.append(value)
-    return template.format(table_name, ','.join(fields_list), ','.join(values_list))
+    return template.format(table_name, ','.join(fields_list), ','.join(values_list), num)
 
 
 def get_element_positions(line_elements):
@@ -178,8 +223,9 @@ def get_element_positions(line_elements):
 
 def get_required_elements(element_positions, split_elements, document_type, verbose):
     result = {}
-    map = cdc_fields_mapping if CDC == document_type else None
-    denom = split_elements[0]
+    map = CDC_FIELDS_MAPPING if CDC == document_type else WHO_FIELDS_MAPPING
+    # print(str(element_positions))
+    denom = split_elements[element_positions.get('denom', element_positions.get('_denom'))]
     # if verbose:
     #     print('/* processing denom: ' + denom + ' */')
     demon_map = map.get(denom)
@@ -191,12 +237,13 @@ def get_required_elements(element_positions, split_elements, document_type, verb
             for input_field, result_field in fields_map.iteritems():
                 # print(str(input_field) + ' -> ' + str(result_field))
                 position = element_positions.get(input_field)
-                if position:
+                if position >= 0:
                     value = split_elements[position]
                     # print('value: ' + str(value))
                     result_fields[result_field] = value
                 else:
-                    print('/* cannot find position for element: ' + str(input_field) + ' */')
+                    print('/* cannot find position for element [' + str(input_field) + '] */')
+                    print('/* positions: ' + str(element_positions) + ' */')
         result['table'] = table_name
         result['fields'] = result_fields
     else:
