@@ -9,6 +9,8 @@ import sys
 
 CDC = 'cdc'
 WHO = 'who'
+CDC_STATURE = 'cdc-stat'
+CDC_ARMC = 'cdc-armc'
 
 
 CDC_FIELDS_MAPPING = {
@@ -126,6 +128,38 @@ WHO_FIELDS_MAPPING = {
 }
 
 
+
+
+CDC_STAT_FIELDS_MAPPING = {
+    'age': {
+        'table': 'cdc_stat_by_age',
+        'fields': {
+            'sex': 'sex',
+            'agemos': 'agemos',
+            'L': 'l',
+            'M': 'm',
+            'S': 's',
+            'P3': 'p3',
+            'P5': 'p5',
+            'P10': 'p10',
+            'P25': 'p25',
+            'P50': 'p50',
+            'P75': 'p75',
+            'P90': 'p90',
+            'P95': 'p95',
+            'P97': 'p97',
+        }
+    },
+}
+
+
+TYPES_MAPPING = {
+    CDC: CDC_FIELDS_MAPPING,
+    WHO: WHO_FIELDS_MAPPING,
+    CDC_STATURE: CDC_STAT_FIELDS_MAPPING,
+    CDC_ARMC: None,
+}
+
 def main(argv):
     try:
         opts, args = getopt.getopt(argv, 't:vh', ['help'])
@@ -141,7 +175,7 @@ def main(argv):
             if option == '-v':
                 verbose = True
             if option == '-t':
-                if argument in (CDC, WHO):
+                if argument in (CDC, WHO, CDC_STATURE, CDC_ARMC):
                     document_type = argument
                 else:
                     print('Error: option -t (type) must be specified correctly')
@@ -165,7 +199,7 @@ def usage():
     print """
     Usage:
 
-    python growth_data_parser.py -t (who|cdc) [-v] inputFile.csv
+    python growth_data_parser.py -t (who|cdc|cdc-stat|cdc-armc) [-v] inputFile.csv
 
     python growth_data_parser.py -h  OR
     python growth_data_parser.py --help  -  print this help message
@@ -223,12 +257,13 @@ def get_element_positions(line_elements):
 
 def get_required_elements(element_positions, split_elements, document_type, verbose):
     result = {}
-    map = CDC_FIELDS_MAPPING if CDC == document_type else WHO_FIELDS_MAPPING
+    # fields_denom_map = CDC_FIELDS_MAPPING if CDC == document_type else WHO_FIELDS_MAPPING
+    fields_denom_map = TYPES_MAPPING.get(document_type)
     # print(str(element_positions))
     denom = split_elements[element_positions.get('denom', element_positions.get('_denom'))]
     # if verbose:
     #     print('/* processing denom: ' + denom + ' */')
-    demon_map = map.get(denom)
+    demon_map = fields_denom_map.get(denom)
     if demon_map:
         table_name = demon_map.get('table')
         fields_map = demon_map.get('fields')
@@ -247,7 +282,7 @@ def get_required_elements(element_positions, split_elements, document_type, verb
         result['table'] = table_name
         result['fields'] = result_fields
     else:
-        print('/* no fields map for type ' + document_type + ' and denom ' + denom + ' */')
+        print('/* no fields fields_denom_map for type ' + document_type + ' and denom ' + denom + ' */')
 
     # print(str(result))
     return result
