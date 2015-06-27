@@ -128,8 +128,6 @@ WHO_FIELDS_MAPPING = {
 }
 
 
-
-
 CDC_STAT_FIELDS_MAPPING = {
     'age': {
         'table': 'cdc_stat_by_age',
@@ -153,12 +151,39 @@ CDC_STAT_FIELDS_MAPPING = {
 }
 
 
+CDC_ARMC_FIELDS_MAPPING = {
+    'age': {
+        'table': 'cdc_armc_by_age',
+        'fields': {
+            'Sex': 'sex',
+            'Age': 'age',
+            'L': 'l',
+            'M': 'm',
+            'S': 's',
+            'P01': 'p01',
+            'P1': 'p1',
+            'P3': 'p3',
+            'P5': 'p5',
+            'P10': 'p10',
+            'P25': 'p25',
+            'P50': 'p50',
+            'P75': 'p75',
+            'P90': 'p90',
+            'P95': 'p95',
+            'P97': 'p97',
+            'P99': 'p99',
+            'P999': 'p999',
+        }
+    },
+}
+
 TYPES_MAPPING = {
     CDC: CDC_FIELDS_MAPPING,
     WHO: WHO_FIELDS_MAPPING,
     CDC_STATURE: CDC_STAT_FIELDS_MAPPING,
-    CDC_ARMC: None,
+    CDC_ARMC: CDC_ARMC_FIELDS_MAPPING,
 }
+
 
 def main(argv):
     try:
