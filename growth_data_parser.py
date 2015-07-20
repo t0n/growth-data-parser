@@ -11,6 +11,8 @@ CDC = 'cdc'
 WHO = 'who'
 CDC_STATURE = 'cdc-stat'
 CDC_ARMC = 'cdc-armc'
+WEIGHT_VELOCITY_1MON = 'weight_velocity_1mon'
+WEIGHT_VELOCITY_2MON = 'weight_velocity_2mon'
 
 
 CDC_FIELDS_MAPPING = {
@@ -177,11 +179,66 @@ CDC_ARMC_FIELDS_MAPPING = {
     },
 }
 
+
+WEIGHT_VELOCITY_FIELDS_MAPPING_1MON = {
+    'age': {
+        'table': 'who_weight_velocity_1mon_by_age',
+        'fields': {
+            'Sex': 'sex',
+            'Interval': 'age',
+            'L': 'l',
+            'M': 'm',
+            'S': 's',
+            'Delta': 'delta',
+            '1st': 'p1',
+            '3rd': 'p3',
+            '5th': 'p5',
+            '15th': 'p15',
+            '25th': 'p25',
+            '50th': 'p50',
+            '75th': 'p75',
+            '85th': 'p85',
+            '95th': 'p95',
+            '97th': 'p97',
+            '99th': 'p99',
+        }
+    },
+}
+
+WEIGHT_VELOCITY_FIELDS_MAPPING_2MON = {
+    'age': {
+        'table': 'who_weight_velocity_2mon_by_age',
+        'fields': {
+            'Sex': 'sex',
+            'agemos_from': 'agemos_from',
+            'agemos_to': 'agemos_to',
+            'L': 'l',
+            'M': 'm',
+            'S': 's',
+            'Delta': 'delta',
+            '1st': 'p1',
+            '3rd': 'p3',
+            '5th': 'p5',
+            '15th': 'p15',
+            '25th': 'p25',
+            '50th': 'p50',
+            '75th': 'p75',
+            '85th': 'p85',
+            '95th': 'p95',
+            '97th': 'p97',
+            '99th': 'p99',
+        }
+    },
+}
+
+
 TYPES_MAPPING = {
     CDC: CDC_FIELDS_MAPPING,
     WHO: WHO_FIELDS_MAPPING,
     CDC_STATURE: CDC_STAT_FIELDS_MAPPING,
     CDC_ARMC: CDC_ARMC_FIELDS_MAPPING,
+    WEIGHT_VELOCITY_1MON: WEIGHT_VELOCITY_FIELDS_MAPPING_1MON,
+    WEIGHT_VELOCITY_2MON: WEIGHT_VELOCITY_FIELDS_MAPPING_2MON,
 }
 
 
@@ -200,7 +257,7 @@ def main(argv):
             if option == '-v':
                 verbose = True
             if option == '-t':
-                if argument in (CDC, WHO, CDC_STATURE, CDC_ARMC):
+                if argument in (CDC, WHO, CDC_STATURE, CDC_ARMC, WEIGHT_VELOCITY_1MON, WEIGHT_VELOCITY_2MON):
                     document_type = argument
                 else:
                     print('Error: option -t (type) must be specified correctly')
